@@ -1,0 +1,22 @@
+# Tự đồng bộ fork này với bản gốc (morluto/rea) mỗi ngày.
+# Chạy tay: tab Actions -> "Đồng bộ với bản gốc" -> Run workflow.
+# Lưu ý: nếu bản gốc sửa file trong .github/workflows, token của Actions không được phép đẩy thay đổi đó
+# -> lần chạy báo lỗi; khi ấy bấm "Sync fork" trên trang repo (hoặc `gh repo sync`) một lần là xong.
+name: Đồng bộ với bản gốc
+
+on:
+  schedule:
+    - cron: '17 1 * * *'   # 08:17 giờ Việt Nam
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gộp thay đổi mới từ bản gốc
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh repo sync "${{ github.repository }}" --branch main
