@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # để tắt các workflow CI/Release của bản gốc trên fork
 
 jobs:
   sync:
@@ -20,3 +21,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh repo sync "${{ github.repository }}" --branch main
+
+      - name: Tắt workflow của bản gốc (chỉ giữ workflow này)
+        # Fork chỉ để giữ bản sao: không chạy CI/Release của tác giả gốc (tốn phút, báo lỗi vì thiếu secret)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/workflows?per_page=100" \
+            --jq '.workflows[] | select(.state == "active") | select(.path != ".github/workflows/sync-upstream.yml") | .id' |
+          while read -r id; do
+            echo "tắt workflow $id"
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/$id/disable"
+          done
